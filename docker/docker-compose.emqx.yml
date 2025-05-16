@@ -1,0 +1,46 @@
+services:
+  emqx:
+    image: emqx/emqx:latest
+    container_name: emqx
+    hostname: emqx    
+    environment:
+      - "EMQX_NAME=admin"
+      - "EMQX_ADMIN_PASSWORD=admin"
+      - "EMQX_HOST=127.0.0.1"
+      # enable MQTT without TLS (Port 1883)
+      - "EMQX_LISTENER__TCP__EXTERNAL=1883"
+      # enable MQTT with TLS (Port 8883)
+      - "EMQX_LISTENER__SSL__EXTERNAL=8883"
+      - "EMQX_LISTENER__SSL__EXTERNAL__ENABLE=true"
+      # config SSL/TLS
+      - "EMQX_LISTENER__SSL__EXTERNAL__KEYFILE=/opt/emqx/etc/certs/key.pem"
+      - "EMQX_LISTENER__SSL__EXTERNAL__CERTFILE=/opt/emqx/etc/certs/cert.pem"
+      - "EMQX_LISTENER__SSL__EXTERNAL__CAFILE=/opt/emqx/etc/certs/cacert.pem"
+      - "EMQX_LISTENER__SSL__EXTERNAL__VERIFY=verify_none"
+    networks:
+      emqx-bridge:
+        aliases:
+        - node.emqx.io
+    ports:
+      - "2883:1883"    #host
+      - "8883:8883"    #TLS/SSL
+      - "18083:18083"  #UI
+      - "8084:8084"    #Web socket with TLS/SSL
+    volumes:
+      - vol-emqx-data:/opt/emqx/data
+      - vol-emqx-etc:/opt/emqx/etc
+      - vol-emqx-log:/opt/emqx/log
+      - ./certs:/opt/emqx/etc/certs  # Mount cert TLS
+    restart: unless-stopped
+
+networks:
+  emqx-bridge:
+    driver: bridge
+
+volumes:
+  vol-emqx-data:
+    name: emqx-data
+  vol-emqx-etc:
+    name: emqx-etc
+  vol-emqx-log:
+    name: emqx-log
